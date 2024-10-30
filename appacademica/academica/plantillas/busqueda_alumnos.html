@@ -54,7 +54,7 @@
     function mostrarFilasAlumnos(data = []){
         let filas = '';
         data.forEach(alumno => {
-            filas += `
+            filas += `z
                 <tr onClick='modificarAlumno(${JSON.stringify(alumno)})'>
                     <td>${alumno.codigo}</td>
                     <td>${alumno.nombre}</td>

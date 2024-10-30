@@ -10,7 +10,7 @@
         </div>
         <div class="card-body">
             <div class="row p-1">
-                <div class="col-3 col-md-2">CODIGO </div>
+                <div class="col-3 col-md-2">CÓDIGO </div>
                 <div class="col-9 col-md-4">
                     <input type="text" class="form-control" id="txtCodigoAlumno" name="txtCodigoAlumno" required>
                 </div>
@@ -22,13 +22,13 @@
                 </div>
             </div>
             <div class="row p-1">
-                <div class="col-3 col-md-2">DIRECCION</div>
+                <div class="col-3 col-md-2">DIRECCIÓN</div>
                 <div class="col-9 col-md-10">
                     <input type="text" class="form-control" id="txtDireccionAlumno" name="txtDireccionAlumno" required>
                 </div>
             </div>
             <div class="row p-1">
-                <div class="col-3 col-md-2">TELEFONO </div>
+                <div class="col-3 col-md-2">TELÉFONO </div>
                 <div class="col-9 col-md-4">
                     <input type="text" class="form-control" id="txtTelefonoAlumno" name="txtTelefonoAlumno" required>
                 </div>
@@ -47,43 +47,105 @@
         </div>
     </div>
 </form>
+
 <script>
-    document.querySelector('#frmAlumno').addEventListener('submit', (e)=>{
+    // Validación del campo de código: solo letras y números
+    function validarCodigo(input) {
+        const valor = input.value;
+        if (/[^A-Za-z0-9]/.test(valor)) {
+            alertify.error('El código solo puede contener letras y números');
+            input.value = valor.replace(/[^A-Za-z0-9]/g, ''); // Mantiene solo letras y números
+        }
+    }
+
+    // Validación del campo de nombre: solo letras y caracteres especiales como acentos
+    function validarNombre(input) {
+        const valor = input.value;
+        if (/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]/.test(valor)) {
+            alertify.error('El nombre solo puede contener letras y espacios');
+            input.value = valor.replace(/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]/g, ''); // Solo permite letras y acentos
+        }
+    }
+
+    // Validación del campo de teléfono: solo permite números
+    function validarTelefono(input) {
+        const valor = input.value;
+        if (/[^0-9]/.test(valor)) {
+            alertify.error('El teléfono solo puede contener números');
+            input.value = valor.replace(/[^0-9]/g, ''); // Permite solo números
+        }
+    }
+
+    // Eventos de validación en tiempo real
+    document.querySelector('#txtCodigoAlumno').addEventListener('input', function() {
+        validarCodigo(this);
+    });
+    document.querySelector('#txtNombreAlumno').addEventListener('input', function() {
+        validarNombre(this);
+    });
+    document.querySelector('#txtTelefonoAlumno').addEventListener('input', function() {
+        validarTelefono(this);
+    });
+
+    // Evento submit para el formulario
+    document.querySelector('#frmAlumno').addEventListener('submit', (e) => {
         e.preventDefault();
         
         let datos = {
-            accion : frmAlumno.dataset.accion,
-            idAlumno : frmAlumno.dataset.idalumno,
-            codigo : txtCodigoAlumno.value,
-            nombre : txtNombreAlumno.value,
-            direccion : txtDireccionAlumno.value,
-            telefono : txtTelefonoAlumno.value
+            accion: frmAlumno.dataset.accion,
+            idAlumno: frmAlumno.dataset.idalumno,
+            codigo: txtCodigoAlumno.value,
+            nombre: txtNombreAlumno.value,
+            direccion: txtDireccionAlumno.value,
+            telefono: txtTelefonoAlumno.value
         };
+
+        if (!/^[A-Za-z0-9]+$/.test(datos.codigo)) {
+            alertify.error("El campo de código solo puede contener letras y números");
+            return;
+        }
+        if (!datos.nombre) {
+            alertify.error("El campo de nombre es obligatorio");
+            return;
+        }
+        if (!datos.direccion) {
+            alertify.error("El campo de dirección es obligatorio");
+            return;
+        }
+        if (!/^[0-9]+$/.test(datos.telefono)) {
+            alertify.error("El campo de teléfono solo debe contener números");
+            return;
+        }
+
         enviarDatosAlumno(datos);
     });
-    function enviarDatosAlumno(datos){
-        fetch('guardar_alumno/',{
-                method : 'POST',
-                body : JSON.stringify(datos)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if( data.msg==='ok' ){
-                    consultarAlumnos();
-                    limpiarDatosAlumnos();
-                }
-            })
-            .catch(err => console.log(err));
+
+    function enviarDatosAlumno(datos) {
+        fetch('guardar_alumno/', {
+            method: 'POST',
+            body: JSON.stringify(datos),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}' 
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.msg === 'ok') {
+                alertify.success("Datos guardados correctamente");
+                consultarAlumnos();
+                limpiarDatosAlumnos();
+            } else {
+                alertify.error("Ocurrió un error al guardar los datos"); // Este mensaje sigue apareciendo si hay un error en el guardado.
+            }
+        })
+        .catch(err => {
+            // Ya no mostramos un mensaje de error de conexión aquí.
+            console.log(err);
+        });
     }
-    function modificarAlumno(alumno){
-        frmAlumno.dataset.accion = 'modificar';
-        frmAlumno.dataset.idalumno = alumno.id;
-        txtCodigoAlumno.value = alumno.codigo;
-        txtNombreAlumno.value = alumno.nombre;
-        txtDireccionAlumno.value = alumno.direccion;
-        txtTelefonoAlumno.value = alumno.telefono;
-    }
-    function limpiarDatosAlumnos(){
+
+    function limpiarDatosAlumnos() {
         frmAlumno.dataset.accion = 'nuevo';
         frmAlumno.dataset.idalumno = '';
         txtCodigoAlumno.value = '';

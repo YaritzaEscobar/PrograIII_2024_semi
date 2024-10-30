@@ -1,3 +1,4 @@
+<!-- Formulario HTML -->
 <form id="frmDocente" data-accion="nuevo" data-iddocente="0">
     <div class="card text-bg-dark mb-3" style="min-width: 700px;">
         <div class="card-header">
@@ -9,34 +10,39 @@
             </div>
         </div>
         <div class="card-body">
+            <!-- Código -->
             <div class="row p-1">
-                <div class="col-3 col-md-2">CODIGO </div>
+                <div class="col-3 col-md-2">CÓDIGO</div>
                 <div class="col-9 col-md-4">
                     <input type="text" class="form-control" id="txtCodigoDocente" name="txtCodigoDocente" required>
                 </div>
             </div>
+            <!-- Nombre -->
             <div class="row p-1">
-                <div class="col-3 col-md-2">NOMBRE </div>
+                <div class="col-3 col-md-2">NOMBRE</div>
                 <div class="col-9 col-md-6">
                     <input type="text" class="form-control" id="txtNombreDocente" name="txtNombreDocente" required>
                 </div>
             </div>
+            <!-- Dirección -->
             <div class="row p-1">
-                <div class="col-3 col-md-2">DIRECCION</div>
+                <div class="col-3 col-md-2">DIRECCIÓN</div>
                 <div class="col-9 col-md-10">
                     <input type="text" class="form-control" id="txtDireccionDocente" name="txtDireccionDocente" required>
                 </div>
             </div>
+            <!-- Teléfono -->
             <div class="row p-1">
-                <div class="col-3 col-md-2">TELEFONO </div>
+                <div class="col-3 col-md-2">TELÉFONO</div>
                 <div class="col-9 col-md-4">
                     <input type="text" class="form-control" id="txtTelefonoDocente" name="txtTelefonoDocente" required>
                 </div>
             </div>
+            <!-- Email -->
             <div class="row p-1">
-                <div class="col-3 col-md-2">EMAIL </div>
+                <div class="col-3 col-md-2">EMAIL</div>
                 <div class="col-9 col-md-4">
-                    <input type="text" class="form-control" id="txtEmailDocente" name="txtEmailDocente" required>
+                    <input type="email" class="form-control" id="txtEmailDocente" name="txtEmailDocente" required>
                 </div>
             </div>
             <div class="row p-1">
@@ -53,45 +59,102 @@
         </div>
     </div>
 </form>
+
+<script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
 <script>
-    document.querySelector('#frmDocente').addEventListener('submit', (e)=>{
+    const frmDocente = document.getElementById('frmDocente');
+    const txtCodigoDocente = document.getElementById('txtCodigoDocente');
+    const txtNombreDocente = document.getElementById('txtNombreDocente');
+    const txtDireccionDocente = document.getElementById('txtDireccionDocente');
+    const txtTelefonoDocente = document.getElementById('txtTelefonoDocente');
+    const txtEmailDocente = document.getElementById('txtEmailDocente');
+
+    // Validación de código: solo letras y números con mensaje de error
+    txtCodigoDocente.addEventListener('input', () => {
+        const valor = txtCodigoDocente.value;
+        const valorFiltrado = valor.replace(/[^A-Za-z0-9]/g, '');
+
+        if (valor !== valorFiltrado) {
+            alertify.error('Código solo permite letras y números');
+            txtCodigoDocente.value = valorFiltrado; // Actualiza el valor del campo sin caracteres inválidos
+        }
+    });
+
+    // Validación de nombre: solo letras y caracteres especiales
+    function validarNombre(input) {
+        const valor = input.value;
+        if (/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]/.test(valor)) {
+            alertify.error('El nombre solo puede contener letras y espacios');
+            input.value = valor.replace(/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]/g, '');
+        }
+    }
+
+    // Validación de teléfono: solo números
+    function validarTelefono(input) {
+        const valor = input.value;
+        if (/[^0-9]/.test(valor)) {
+            alertify.error('El teléfono solo puede contener números');
+            input.value = valor.replace(/[^0-9]/g, ''); 
+        }
+    }
+
+    // Eventos de validación en tiempo real
+    txtNombreDocente.addEventListener('input', function() {
+        validarNombre(this);
+    });
+    txtTelefonoDocente.addEventListener('input', function() {
+        validarTelefono(this);
+    });
+
+    // Validación y envío del formulario de docente
+    frmDocente.addEventListener('submit', (e) => {
         e.preventDefault();
-        
+        const codigo = txtCodigoDocente.value;
+        const nombre = txtNombreDocente.value;
+        const direccion = txtDireccionDocente.value;
+        const telefono = txtTelefonoDocente.value;
+        const email = txtEmailDocente.value;
+
+        // Crear objeto de datos para enviar
         let datos = {
-            accion : frmDocente.dataset.accion,
-            idDocente : frmDocente.dataset.iddocente,
-            codigo : txtCodigoDocente.value,
-            nombre : txtNombreDocente.value,
-            direccion : txtDireccionDocente.value,
-            telefono : txtTelefonoDocente.value,
-            email : txtEmailDocente.value
+            accion: frmDocente.dataset.accion,
+            idDocente: frmDocente.dataset.iddocente,
+            codigo: codigo,
+            nombre: nombre,
+            direccion: direccion,
+            telefono: telefono,
+            email: email
         };
+
         enviarDatosDocente(datos);
     });
-    function enviarDatosDocente(datos){
-        fetch('guardar_docente/',{
-                method : 'POST',
-                body : JSON.stringify(datos)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if( data.msg==='ok' ){
-                    consultarDocentes();
-                    limpiarDatosDocentes();
-                }
-            })
-            .catch(err => console.log(err));
+
+    // Función para enviar datos a la API
+    function enviarDatosDocente(datos) {
+        fetch('guardar_docente/', {
+            method: 'POST',
+            body: JSON.stringify(datos),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.msg === 'ok') {
+                alertify.success("Datos guardados correctamente");
+                limpiarDatosDocentes();
+            } else {
+                alertify.error("Error al guardar los datos");
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        });
     }
-    function modificarDocente(docente){
-        frmDocente.dataset.accion = 'modificar';
-        frmDocente.dataset.iddocente = docente.id;
-        txtCodigoDocente.value = docente.codigo;
-        txtNombreDocente.value = docente.nombre;
-        txtDireccionDocente.value = docente.direccion;
-        txtTelefonoDocente.value = docente.telefono;
-        txtEmailDocente.value = docente.email;
-    }
-    function limpiarDatosDocentes(){
+
+    // Limpiar datos del formulario de docentes
+    function limpiarDatosDocentes() {
         frmDocente.dataset.accion = 'nuevo';
         frmDocente.dataset.iddocente = '';
         txtCodigoDocente.value = '';
